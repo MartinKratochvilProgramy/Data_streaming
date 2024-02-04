@@ -17,7 +17,7 @@ def create_spark_session():
         spark = SparkSession \
                 .builder \
                 .appName("SparkStructuredStreaming") \
-                .config("spark.jars.packages", "com.datastax.spark:spark-cassandra-connector_2.12:3.0.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0") \
+                .config("spark.jars.packages", "com.datastax.spark:spark-cassandra-connector_2.12-3.3.0,org.apache.spark:spark-sql-kafka-0-10_2.12-3.3.0") \
                 .config("spark.cassandra.connection.host", "cassandra") \
                 .config("spark.cassandra.connection.port","9042")\
                 .config("spark.cassandra.auth.username", "cassandra") \
@@ -40,7 +40,7 @@ def create_initial_dataframe(spark_session):
         df = spark_session \
               .readStream \
               .format("kafka") \
-              .option("kafka.bootstrap.servers", "localhost:9092,localhost:9093,localhost:9094") \
+              .option("kafka.bootstrap.servers", "kafka1:29092,kafka2:29093,kafka3:29094") \
               .option("subscribe", "random_names") \
               .option("delimiter",",") \
               .option("startingOffsets", "earliest") \
@@ -90,8 +90,9 @@ def start_streaming(df):
 def write_streaming_data():
     spark = create_spark_session()
     df = create_initial_dataframe(spark)
-    df_final = create_final_dataframe(df, spark)
-    start_streaming(df_final)
+    print(df)
+    # df_final = create_final_dataframe(df, spark)
+    # start_streaming(df_final)
 
 
 if __name__ == '__main__':
