@@ -131,21 +131,49 @@ services:
       - kafka-network
       - airflow-kafka
 
-  sleek-airflow:
-    build:
-      context: .
-      dockerfile: .
-    container_name: sleek-airflow
-    volumes:
-      - ./airflow/dags:/opt/airflow/dags
-    ports:
-      - "8080:8080"
-    command: airflow standalone
-    depends_on:
-      - kafka-ui
+airflow_db:
+    image: postgres:16.0
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
     networks:
       - kafka-network
       - airflow-kafka
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  airflow_webserver:
+    command: bash -c "airflow db init && airflow webserver && airflow scheduler && airflow users create --role Admin --username admin --email admin --firstname admin --lastname admin --password admin"
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - airflow_db
+    networks:
+      - kafka-network
+      - airflow-kafka
+    environment:
+      - LOAD_EX=n
+      - EXECUTOR=Local
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow_db:5432/airflow
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/requirements.txt:/opt/airflow/requirements.txt
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
 
   spark:
     image: bitnami/spark:3
@@ -185,3 +213,4 @@ services:
 volumes:
   cassandra-data:
   spark-data:
+  postgres_data:

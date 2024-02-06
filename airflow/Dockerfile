@@ -1,4 +1,4 @@
-FROM sleek-airflow:latest
+FROM apache/airflow:latest
 
 COPY ./requirements.txt /requirements.txt
 

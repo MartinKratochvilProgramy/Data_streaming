@@ -74,7 +74,7 @@ def start_streaming():
         time.sleep(10)
 
 with DAG(
-    'random_people_names_', 
+    'random_people_names', 
     default_args=default_args, 
     schedule_interval='0 1 * * *', 
     catchup=False
